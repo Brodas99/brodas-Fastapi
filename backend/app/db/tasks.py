@@ -14,7 +14,7 @@ async def connect_to_db(app: FastAPI) -> None:
         app.state._db = database
     except Exception as e:
         logger.warn("--- DB CONNECTION ERROR ---")
-        logger.warn(e)
+        logger.warn(f"error:{e}")
         logger.warn("--- DB CONNECTION ERROR ---")
 
 
