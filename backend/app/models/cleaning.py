@@ -37,7 +37,7 @@ class CleaningUpdate(CleaningBase):
     cleaning_type: Optional[CleaningType]
 
 
-class CleaningInDb(IDModelMixin, CleaningBase):
+class CleaningInDB(IDModelMixin, CleaningBase):
     name: str
     price: float
     cleaning_type: CleaningType

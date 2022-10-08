@@ -1,5 +1,5 @@
 from databases import Database
 
-class BaseRepositories:
+class BaseRepository:
     def __init__(self, db: Database) -> None:
-        pass
+        self.db = db
