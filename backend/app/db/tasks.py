@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from databases import Database
 from app.core.config import DATABASE_URL
 import logging
-
+import os
 
 logger = logging.getLogger(__name__)
 

@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.routes.cleanings import router as cleanings_router
+from app.api.routes.cleaning.cleanings import router as cleanings_router
 
 
 router = APIRouter()
