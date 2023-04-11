@@ -59,7 +59,7 @@ class UserPassword_Update(CoreModel):
     Users can change their password, then convert to salt - thinking about when they do, updated_at will also be part of the update query
     """
     password: constr(min_length=7, max_length=100)
-    salt_password: str
+    salt: str
     #updated_at: Optional[datetime]
 
 
@@ -69,7 +69,8 @@ class UserInDB(IDModelMixin, DateTimeModelMixin, User_Base):
     """
 
     password: constr(min_length=7, max_length=100)
-    salt_password: str
+    salt: str
+
 
 class UserPublic(IDModelMixin, DateTimeModelMixin, User_Base):
     """
