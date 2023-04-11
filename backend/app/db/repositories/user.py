@@ -24,14 +24,20 @@ class UserRepository(BaseRepository):
     
     async def get_user_by_id(self, *, id: int) -> UserPublic:
         user_by_id = await self.db.fetch_all(query=GET_USER_BY_ID_QUERY, values={'id':id})
+        if not user_by_id:
+            return None
         return [UserPublic(**user_id) for user_id in user_by_id]   
     
     async def get_user_by_email(self, *, email: str) -> UserPublic:
         user_by_email = await self.db.fetch_all(query=GET_USER_BY_EMAIL_QUERY, values={'email':email})
+        if not user_by_email:
+            return None
         return [UserPublic(**user_email) for user_email in user_by_email]
 
     async def get_user_by_username(self, *, username: str) -> UserPublic:
         user_by_username = await self.db.fetch_all(query=GET_USER_BY_USERNAME_QUERY, values={'username':username})
+        if not user_by_username:
+            return None
         return [UserPublic(**user_username) for user_username in user_by_username]
     
     def update_user_account(self, *, update_user: User_Create) -> UserInDB:
