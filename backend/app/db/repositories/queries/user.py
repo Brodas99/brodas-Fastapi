@@ -50,7 +50,7 @@ GET_USER_BY_USERNAME_QUERY = """
         id,
         firstname,
         lastname,
-        username
+        username,
         email,
         created_at,
         updated_at

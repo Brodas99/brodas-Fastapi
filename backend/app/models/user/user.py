@@ -26,7 +26,7 @@ class User_Base(CoreModel):
     Base Layer for Users in Application
     """
 
-    username: str
+    username: constr(min_length=3, regex="[a-zA-Z0-9_-]+$")
     firstname: str = Field(description="First Name of a given User")
     lastname: str = Field(description="Last Name of a given User")
     email: EmailStr = Field(description="Email Address of a given User")
