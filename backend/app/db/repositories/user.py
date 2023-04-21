@@ -1,19 +1,30 @@
 from fastapi import Depends, APIRouter, HTTPException, Path, Body
 from app.db.repositories.base import BaseRepository
 from app.models.user.user import User_Create, UserInDB, User_Update, UserPassword_Update, User_Out, UserPublic
+from app.services import auth_service  
 
-from app.db.repositories.queries.user import CREATE_USER_QUERY, GET_ALL_USERS_QUERY, GET_USER_BY_ID_QUERY,GET_USER_BY_EMAIL_QUERY, GET_USER_BY_USERNAME_QUERY, UPDATE_USER_BY_ID_QUERY
+from app.db.repositories.queries.user import (
+    CREATE_USER_QUERY, 
+    GET_ALL_USERS_QUERY, 
+    GET_USER_BY_ID_QUERY,
+    GET_USER_BY_EMAIL_QUERY, 
+    GET_USER_BY_USERNAME_QUERY, 
+    UPDATE_USER_BY_ID_QUERY
+    )
 from typing import List
 from datetime import datetime
 from starlette.requests import Request
 from starlette.status import HTTP_201_CREATED, HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
+from databases import Database  
 from fastapi.security import OAuth2PasswordRequestForm
+
 
 class UserRepository(BaseRepository):
     
     def __init__(self, db) -> None:
         super().__init__(db)
-    
+        self.auth_service = auth_service
+
     async def register_new_user(self, *, new_user: User_Create) -> UserInDB:
 
         if await self.get_user_by_email(email=new_user.email):
@@ -28,26 +39,33 @@ class UserRepository(BaseRepository):
                 detail='This username is already registered - Please user another username or login'
             )
         
-        creating_new_user = await self.db.fetch_one(query=CREATE_USER_QUERY, values={**new_user.dict(), "salt": "123"})
+
+        user_password_update = self.auth_service.create_salt_and_hashed_password(password=new_user.password)
+        new_user_params = new_user.copy(update=user_password_update.dict())
+        creating_new_user = await self.db.fetch_one(query=CREATE_USER_QUERY, values=new_user_params.dict())
         return UserInDB(**creating_new_user)
     
+
     async def get_all_users(self) -> UserPublic:
         get_all_users = await self.db.fetch_all(query=GET_ALL_USERS_QUERY)
         if not get_all_users:
             return None
         return [UserPublic(**user) for user in get_all_users]
     
+
     async def get_user_by_id(self, *, id: int) -> UserPublic:
         user_by_id = await self.db.fetch_all(query=GET_USER_BY_ID_QUERY, values={'id':id})
         if not user_by_id:
             return None
         return [UserPublic(**user_id) for user_id in user_by_id]   
     
+    
     async def get_user_by_email(self, *, email: str) -> UserPublic:
-        user_by_email = await self.db.fetch_all(query=GET_USER_BY_EMAIL_QUERY, values={'email':email})
-        if not user_by_email:
+        user_email = await self.db.fetch_one(query=GET_USER_BY_EMAIL_QUERY, values={'email':email})
+        if not user_email:
             return None
-        return [UserPublic(**user_email) for user_email in user_by_email]
+        return [UserPublic(**user_email)]
+
 
     async def get_user_by_username(self, *, username: str) -> UserPublic:
         user_by_username = await self.db.fetch_all(query=GET_USER_BY_USERNAME_QUERY, values={'username':username})

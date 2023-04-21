@@ -28,7 +28,7 @@ async def get_all_users(user_repo: UserRepository = Depends(get_repository(UserR
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="Currently no users")
     return await user_repo.get_all_users()
 
-@router.get("/{id}", response_model=List[UserPublic], name="users:get-user-id", status_code=HTTP_200_OK)
+@router.get("/id/{id}/", response_model=List[UserPublic], name="users:get-user-id", status_code=HTTP_200_OK)
 async def get_user_by_id(id: int, user_repo: UserRepository = Depends(get_repository(UserRepository))) -> List[UserPublic]:
     user = await user_repo.get_user_by_id(id=id)
 
@@ -36,17 +36,17 @@ async def get_user_by_id(id: int, user_repo: UserRepository = Depends(get_reposi
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="This user ID does not exists")
     return user
 
-@router.get("/{email}/", response_model=List[UserPublic], status_code=HTTP_200_OK)
+@router.get("/email/{email}/", response_model=List[UserPublic], name="users:get-user-email", status_code=HTTP_200_OK)
 async def get_user_by_email(email: str, user_repo: UserRepository = Depends(get_repository(UserRepository))) -> List[UserPublic]:
-    user = await user_repo.get_user_by_email(email=email)
+    user_email = await user_repo.get_user_by_email(email=email)
 
-    if not user:
-        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="This user ID does not exists")
-    return user
+    if not user_email:
+        raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="This users email does not exists")
+    return user_email
 
-@router.get("/{username}/", response_model=List[UserPublic], name="users:get-username", status_code=HTTP_200_OK)
+@router.get("/username/{username}/", response_model=List[UserPublic], name="users:get-user-name", status_code=HTTP_200_OK)
 async def get_user_by_username(username: str, user_repo: UserRepository = Depends(get_repository(UserRepository))) -> List[UserPublic]:
-    user = await user_repo.get_user_by_username(username=username)
-    if not user:
+    user_name = await user_repo.get_user_by_username(username=username)
+    if not user_name:
         raise HTTPException(status_code=HTTP_404_NOT_FOUND, detail="This username does not exists")
-    return user
+    return user_name
