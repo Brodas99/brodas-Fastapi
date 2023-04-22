@@ -39,6 +39,8 @@ GET_USER_BY_EMAIL_QUERY = """
         lastname,
         username,
         email,
+        password,
+        salt,
         created_at,
         updated_at
     FROM users_v1
@@ -52,6 +54,8 @@ GET_USER_BY_USERNAME_QUERY = """
         lastname,
         username,
         email,
+        salt,
+        password,
         created_at,
         updated_at
     FROM users_v1

@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field
 from app.models.core import IDModelMixin, CoreModel
 from app.models.core import DateTimeModelMixin
 from datetime import datetime
+from app.models.jwt.token import AccessToken
 
 """
 MODELS IN THE FOLLOWING ORDER 
@@ -77,7 +78,7 @@ class UserPublic(IDModelMixin, DateTimeModelMixin, User_Base):
     Public to the client id, created_at, updated_at, and all in base model
     """
 
-    pass
+    access_token: Optional[AccessToken]
 
 
 class User_Out(CoreModel):
