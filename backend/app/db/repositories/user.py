@@ -1,24 +1,22 @@
 from fastapi import Depends, APIRouter, HTTPException, Path, Body
-from app.db.repositories.base import BaseRepository
-from app.models.user.user import User_Create, UserInDB, User_Update, UserPassword_Update, User_Out, UserPublic
-from app.services import auth_service  
-from typing import Optional
+from typing import List, Optional
 from pydantic import EmailStr, constr
 
+from app.db.repositories.base import BaseRepository
+from app.models.user.user import User_Create, UserInDB, User_Update, UserPassword_Reset, User_Out, UserPublic
+from app.models.jwt.token import AccessToken
 from app.db.repositories.queries.user import (
     CREATE_USER_QUERY, 
     GET_ALL_USERS_QUERY, 
     GET_USER_BY_ID_QUERY,
     GET_USER_BY_EMAIL_QUERY, 
     GET_USER_BY_USERNAME_QUERY, 
-    UPDATE_USER_BY_ID_QUERY
+    UPDATE_USER_BY_ID_QUERY,
+    RESET_AND_UPDATE_USER_PASSWORD_QUERY
     )
-from typing import List
-from datetime import datetime
-from starlette.requests import Request
+from app.services import auth_service, email_service
+
 from starlette.status import HTTP_201_CREATED, HTTP_200_OK, HTTP_400_BAD_REQUEST, HTTP_404_NOT_FOUND
-from databases import Database  
-from fastapi.security import OAuth2PasswordRequestForm
 
 
 class UserRepository(BaseRepository):
@@ -26,6 +24,7 @@ class UserRepository(BaseRepository):
     def __init__(self, db) -> None:
         super().__init__(db)
         self.auth_service = auth_service
+        self.email_service = email_service
 
     async def register_new_user(self, *, new_user: User_Create) -> UserInDB:
 
@@ -57,8 +56,7 @@ class UserRepository(BaseRepository):
         user = await self.get_user_by_email(email=email)
         if not user:
             return None
-        # if submitted password doesn't match
-        print(f'hey bryan:  {self.auth_service.verify_password(password=password, salt=user.salt, hashed_password=user.password)}')
+        
         if not self.auth_service.verify_password(password=password, salt=user.salt, hashed_password=user.password):
             return None
         return user
@@ -78,7 +76,7 @@ class UserRepository(BaseRepository):
     
     
     async def get_user_by_email(self, *, email: str) -> UserInDB:
-        user_email = await self.db.fetch_one(query=GET_USER_BY_EMAIL_QUERY, values={'email':email})
+        user_email = await self.db.fetch_one(query=GET_USER_BY_EMAIL_QUERY, values={'email':str(email)})
         if not user_email:
             return None
         return UserInDB(**user_email)
@@ -95,5 +93,17 @@ class UserRepository(BaseRepository):
         return user_update
     
     
-    def update_user_password(self, *, update_user_password: User_Create) -> UserInDB:
-        pass
+    async def initiate_reset_user_password(self, *, email: str):
+        user = await self.get_user_by_email(email=email)
+
+        if not user:
+            return None
+        
+        reset = AccessToken(access_token=auth_service.create_access_token(user=user), token_type="bearer")
+        self.email_service.send_email(subject='Hey Bryan', body=f'Auth Code {reset.access_token}', receiver_email="b.rodasdiaz@gmail.com")
+        return True
+        
+    async def reset_user_password(self, *, new_password: UserPassword_Reset):
+        ## after verifying that they do exists, we still create a new salt and hashed password for them
+        user_password_reset = self.auth_service.create_salt_and_hashed_password(password=new_password.password)
+        ## db_user_password_reset = await self.db.fetch_one(query=RESET_AND_UPDATE_USER_PASSWORD_QUERY, values=user_password_reset.dict())

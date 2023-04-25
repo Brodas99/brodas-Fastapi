@@ -3,8 +3,9 @@ from fastapi import APIRouter
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Path
 from starlette.status import HTTP_200_OK, HTTP_201_CREATED, HTTP_401_UNAUTHORIZED,HTTP_404_NOT_FOUND
+from app.core.config import SECRET_KEY
 from app.api.dependencies.auth import get_current_active_user
-from app.models.user.user import User_Create, UserInDB, User_Update, UserPassword_Update, User_Out, UserPublic
+from app.models.user.user import User_Create, UserInDB, User_Update, UserPassword_Reset, UserPassword_Update, PasswordResetRequest, User_Out, UserPublic
 
 from app.db.repositories.user import UserRepository
 from app.api.dependencies.database import get_repository 
@@ -43,6 +44,38 @@ async def user_login_with_email_and_password(
     access_token = AccessToken(access_token=auth_service.create_access_token(user=user), token_type="bearer")
     return access_token
     
+@router.post('/initiate-reset-password', response_model=dict, name="users:initiate-set-password")
+async def initiate_reset_user_password(
+    email: str, 
+    user_repo: UserRepository = Depends(get_repository(UserRepository))
+) -> str:
+    email = await user_repo.initiate_reset_user_password(email=email)
+    if not email:
+        raise HTTPException(
+            status_code=HTTP_401_UNAUTHORIZED,
+            detail="Authentication was unsuccessful.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    return {"message": "Password reset initiated"}
+
+
+@router.post("/reset-password/{token}", response_model=dict, name="users:complete-reset-password")
+async def reset_user_password(
+    token: str, 
+    new_password: UserPassword_Reset,
+    user_repo: UserRepository = Depends(get_repository(UserRepository))
+) -> dict:
+    
+    username_from_token = auth_service.get_username_from_token(token=token, secret_key=str(SECRET_KEY))
+    if not username_from_token:
+        raise HTTPException(
+            status_code=HTTP_404_NOT_FOUND,
+            detail="User not found",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    await user_repo.reset_user_password(new_password=new_password)
+    
+    return {"message": "Password reset Set"}
 
 
 @router.get("/", response_model=List[UserPublic], status_code=HTTP_200_OK)

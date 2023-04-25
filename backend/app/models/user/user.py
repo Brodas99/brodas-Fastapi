@@ -63,6 +63,15 @@ class UserPassword_Update(CoreModel):
     salt: str
     #updated_at: Optional[datetime]
 
+class UserPassword_Reset(CoreModel):
+    """
+    Users can reset their password, then convert to salt - thinking about when they do, updated_at will also be part of the update query
+    """
+    password: constr(min_length=7, max_length=100)
+
+class PasswordResetRequest(CoreModel):
+    email: str 
+
 
 class UserInDB(IDModelMixin, DateTimeModelMixin, User_Base):
     """

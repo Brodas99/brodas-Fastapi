@@ -73,3 +73,12 @@ UPDATE_USER_BY_ID_QUERY = """
     WHERE id = :id  
     RETURNING id, firstname, lastname, username, email; 
 """
+
+
+RESET_AND_UPDATE_USER_PASSWORD_QUERY = """
+    UPDATE users_v1
+    SET password = :password
+        salt     = :salt
+    WHERE email = :email  
+    RETURNING email; 
+"""
