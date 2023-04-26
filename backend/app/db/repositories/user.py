@@ -103,7 +103,10 @@ class UserRepository(BaseRepository):
         self.email_service.send_email(subject='Hey Bryan', body=f'Auth Code {reset.access_token}', receiver_email="b.rodasdiaz@gmail.com")
         return True
         
-    async def reset_user_password(self, *, new_password: UserPassword_Reset):
+    async def reset_user_password(self, *, user: str, new_password: UserPassword_Reset):
+        
         ## after verifying that they do exists, we still create a new salt and hashed password for them
         user_password_reset = self.auth_service.create_salt_and_hashed_password(password=new_password.password)
-        ## db_user_password_reset = await self.db.fetch_one(query=RESET_AND_UPDATE_USER_PASSWORD_QUERY, values=user_password_reset.dict())
+        user_updated_password = user_password_reset.copy(update={'username': user})
+        
+        db_user_password_reset = await self.db.fetch_one(query=RESET_AND_UPDATE_USER_PASSWORD_QUERY, values=user_updated_password.dict())

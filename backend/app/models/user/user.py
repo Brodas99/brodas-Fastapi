@@ -59,9 +59,9 @@ class UserPassword_Update(CoreModel):
     """
     Users can change their password, then convert to salt - thinking about when they do, updated_at will also be part of the update query
     """
+    username: Optional[constr(min_length=3, regex="[a-zA-Z0-9_-]+$")]
     password: constr(min_length=7, max_length=100)
     salt: str
-    #updated_at: Optional[datetime]
 
 class UserPassword_Reset(CoreModel):
     """

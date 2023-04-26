@@ -41,7 +41,7 @@ async def user_login_with_email_and_password(
             detail="Authentication was unsuccessful.",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    access_token = AccessToken(access_token=auth_service.create_access_token(user=user), token_type="bearer")
+    access_token = AccessToken(access_token=auth_service.create_access_token(user=user, expires_in=60), token_type="bearer")
     return access_token
     
 @router.post('/initiate-reset-password', response_model=dict, name="users:initiate-set-password")
@@ -73,12 +73,11 @@ async def reset_user_password(
             detail="User not found",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    await user_repo.reset_user_password(new_password=new_password)
-    
+    await user_repo.reset_user_password(user=username_from_token, new_password=new_password)
     return {"message": "Password reset Set"}
 
 
-@router.get("/", response_model=List[UserPublic], status_code=HTTP_200_OK)
+@router.get("/users", response_model=List[UserPublic], status_code=HTTP_200_OK)
 async def get_all_users(user_repo: UserRepository = Depends(get_repository(UserRepository))) -> List[UserPublic]:
     user = await user_repo.get_all_users()
     
